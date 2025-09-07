@@ -61,29 +61,61 @@
                 if (schema.community) appendElement('p', mainElement, `Community:<br><span><a href="${schema.community}">${schema.community}</a></span>`);
                 appendElement('p', mainElement, `Source:<br><span><a href="${schema.$id}">${schema.$id}</a></span>`);
                 if (schema.website) appendElement('p', mainElement, `Website:<br><span><a href="${schema.website}">${schema.website}</a></span>`);
-                var category = "";
-                for (p in schema.properties) {
-                    if (schema.properties[p].category != category) {
-                        category = schema.properties[p].category;
-                        if (category) appendElement('h2', mainElement, category, "category");
-                        else appendElement('h2', mainElement, "Attributen", "category");
+                // Handle schemas with root-level properties
+                if (schema.properties) {
+                    var category = "";
+                    for (p in schema.properties) {
+                        if (schema.properties[p].category != category) {
+                            category = schema.properties[p].category;
+                            if (category) appendElement('h2', mainElement, category, "category");
+                            else appendElement('h2', mainElement, "Attributen", "category");
+                        }
+                        appendElement('h2', mainElement, schema.properties[p].name);
+                        if (schema.properties[p].description) appendElement('p', mainElement, schema.properties[p].description, "description");
+                        if (schema.properties[p].instructions) appendElement('p', mainElement, schema.properties[p].instructions, "instructions");
+                        var pElement = appendElement('p', mainElement, "");
+                        if (p) appendElement('span', pElement, "property: " + p, "display");
+                        if (schema.properties[p].type) appendElement('span', pElement, "type: " + schema.properties[p].type, "type");
+                        if (schema.properties[p].maxLength) appendElement('span', pElement, "maxlength: " + schema.properties[p].maxLength, "maxlength");
+                        if (schema.properties[p].format) appendElement('span', pElement, "format: " + schema.properties[p].format, "format");
+                        if (schema.properties[p].pattern) appendElement('span', pElement, "pattern: " + schema.properties[p].pattern, "pattern");
+                        if (schema.properties[p].const) appendElement('span', pElement, "const: " + schema.properties[p].const, "const");
+                        if (schema.properties[p].enum) appendElement('span', pElement, "enum: " + schema.properties[p].enum.join(', '), "enum");
+                        if (schema.properties[p].$ref) appendElement('span', pElement, `$ref: <a href="${schema.properties[p].$ref}">${schema.properties[p].$ref}</a>`, "ref");
+                        if (schema.properties[p].display) appendElement('span', pElement, "display: " + schema.properties[p].display, "display");
+                        appendInputElement(pElement, schema.properties[p]);
+                        if (schema.properties[p].$ref) appendElement('p', mainElement, `<a href="{{ page.url | relative_url }}?url=${schema.properties[p].$ref}">Bekijk het schema voor ${schema.properties[p].name}.</a>`, "ref");
+                        appendElement('hr', mainElement, "");
                     }
-                    appendElement('h2', mainElement, schema.properties[p].name);
-                    if (schema.properties[p].description) appendElement('p', mainElement, schema.properties[p].description, "description");
-                    if (schema.properties[p].instructions) appendElement('p', mainElement, schema.properties[p].instructions, "instructions");
-                    var pElement = appendElement('p', mainElement, "");
-                    if (p) appendElement('span', pElement, "property: " + p, "display");
-                    if (schema.properties[p].type) appendElement('span', pElement, "type: " + schema.properties[p].type, "type");
-                    if (schema.properties[p].maxLength) appendElement('span', pElement, "maxlength: " + schema.properties[p].maxLength, "maxlength");
-                    if (schema.properties[p].format) appendElement('span', pElement, "format: " + schema.properties[p].format, "format");
-                    if (schema.properties[p].pattern) appendElement('span', pElement, "pattern: " + schema.properties[p].pattern, "pattern");
-                    if (schema.properties[p].const) appendElement('span', pElement, "const: " + schema.properties[p].const, "const");
-                    if (schema.properties[p].enum) appendElement('span', pElement, "enum: " + schema.properties[p].enum.join(', '), "enum");
-                    if (schema.properties[p].$ref) appendElement('span', pElement, `$ref: <a href="${schema.properties[p].$ref}">${schema.properties[p].$ref}</a>`, "ref");
-                    if (schema.properties[p].display) appendElement('span', pElement, "display: " + schema.properties[p].display, "display");
-                    appendInputElement(pElement, schema.properties[p]);
-                    if (schema.properties[p].$ref) appendElement('p', mainElement, `<a href="{{ page.url | relative_url }}?url=${schema.properties[p].$ref}">Bekijk het schema voor ${schema.properties[p].name}.</a>`, "ref");
-                    appendElement('hr', mainElement, "");
+                }
+                // Handle schemas with $defs
+                else if (schema.$defs) {
+                    appendElement('h2', mainElement, "Definities", "category");
+                    for (defName in schema.$defs) {
+                        const def = schema.$defs[defName];
+                        appendElement('h2', mainElement, def.title || defName);
+                        if (def.description) appendElement('p', mainElement, def.description);
+                        var pElement = appendElement('p', mainElement, "");
+                        appendElement('span', pElement, "definitie: " + defName, "display");
+                        if (def.type) appendElement('span', pElement, "type: " + def.type, "type");
+                        appendElement('hr', mainElement, "");
+                    }
+                }
+                // Handle schemas with definitions (older format)
+                else if (schema.definitions) {
+                    appendElement('h2', mainElement, "Definities", "category");
+                    for (defName in schema.definitions) {
+                        const def = schema.definitions[defName];
+                        appendElement('h2', mainElement, def.title || defName);
+                        if (def.description) appendElement('p', mainElement, def.description);
+                        var pElement = appendElement('p', mainElement, "");
+                        appendElement('span', pElement, "definitie: " + defName, "display");
+                        if (def.type) appendElement('span', pElement, "type: " + def.type, "type");
+                        appendElement('hr', mainElement, "");
+                    }
+                }
+                else {
+                    appendElement('p', mainElement, "Geen eigenschappen of definities gevonden in dit schema.");
                 }
             });
     </script>
